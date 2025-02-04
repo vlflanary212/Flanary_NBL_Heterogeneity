@@ -1,0 +1,19 @@
+# Rproject files
+.Rhistory
+.Rapp.history
+.RData
+.Renviron
+.Ruserdata
+.Rproj.user/
+
+# Temporary files made by Rmarkdown
+*.utf8.md
+*.knit.md
+
+# Cache
+.DS_Store
+*_cache/
+/cache/
+
+# Large data files
+NBAtlas/data/
