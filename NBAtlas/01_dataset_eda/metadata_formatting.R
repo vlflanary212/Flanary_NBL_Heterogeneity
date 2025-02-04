@@ -10,7 +10,7 @@ library(here)
 
 ## Load data
 seurat_obj <- readRDS(
-  here("NB_ITH", "NBAtlas", "data", "alldata", "00_init_obj.rds")
+  here("NB_ITH", "NBAtlas", "data", "subset", "00_init_obj.rds")
 )
 
 # Extract metadata
@@ -34,6 +34,28 @@ colnames(metadata)
 # orig.ident seems to refer to original cell type annotations given by the 
 # NBAtlas authors instead of patient or tumor sample
 identical(metadata$orig.ident, metadata$Cell_type)  # TRUE
+
+# Edit the metadata in the object to your desired formatting
+## Combine Slyper2020_cell and Slyper2020_nucleus - split by batch later
+metadata <- mutate(
+  metadata, 
+  Study = case_when(grepl("Slyper2020", Study) ~ "Slyper2020", TRUE ~ Study)
+  )
+
+## Split Patient_No by Number and Timepoint, and remove Timepoint (already recorded)
+## More easily lets you see which patients have more than one associated sample
+metadata <- metadata |>
+  separate(col = "Patient_No", into = c("Patient_No", "T")) |>
+  dplyr::select(all_of(setdiff(colnames(metadata), "T")))
+
+# Save the metadata in the Seurat object
+seurat_obj@meta.data <- metadata
+
+# Save the edited Seurat object
+saveRDS(
+  seurat_obj,
+  here("NB_ITH", "NBAtlas", "data", "subset", "00_formatted_obj.rds")
+)
 
 # Isolate metadata of interest for plotting
 # Keeping all but orig.ident and the continuous technical variables
