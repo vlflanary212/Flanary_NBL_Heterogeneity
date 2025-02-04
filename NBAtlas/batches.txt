@@ -1,0 +1,9 @@
+Dong2020_single-cell_10X_v2_Fresh
+Dong2020_single-cell_10X_v3_Fresh
+Jansky2021_single-nucleus_10X_v2_Snap-frozen
+Kildisiute2021_10X_single-cell_10X_v2_Fresh
+Slyper2020_cell_single-cell_10X_v2_Fresh
+Slyper2020_nucleus_single-nucleus_10X_v2_Snap-frozen
+Verhoeven2022_single-cell_10X_v2_Viable-frozen
+Verhoeven2022_single-cell_10X_v3_Viable-frozen
+Costa2022_single-cell_10X_v3_Fresh
