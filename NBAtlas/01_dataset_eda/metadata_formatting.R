@@ -17,27 +17,8 @@ seurat_obj <- readRDS(
   file.path(data_dir, "00_init_obj.rds")
 )
 
-# Split the object by batch
-seurat_obj@meta.data <- mutate(
-  seurat_obj@meta.data,
-  Batch = paste(Study, Assay, Platform, Cell_condition, sep = "_")
-)
-
-## Save batches in a text file
-write.table(
-  unique(seurat_obj$Batch),
-  here("NBAtlas", "batches.txt"),
-  sep = "\t",
-  row.names = FALSE,
-  col.names = FALSE,
-  quote = FALSE
-)
-
-# Extract metadata
+# Extract the metadata
 metadata <- seurat_obj@meta.data
-
-# Note: would save and track all the metadata at this point, but the file size
-# Exceeds GitHub's limit of 50 MB
 
 #  Note the types of metadata available
 colnames(metadata)
@@ -68,8 +49,21 @@ metadata <- mutate(
 metadata$Patient_No <- gsub("^([0-9]+).*", "\\1", metadata$Patient_No)
 metadata$Patient_No <- as.factor(metadata$Patient_No)
 
-## Factorize and re-order levels for Timepoint
-metadata$Timepoint <- factor(metadata$Timepoint, levels = c("pre-treatment", "post-treatment", "relapse", "unknown"))
+## Add Batch as a metadata variable
+metadata <- mutate(
+  metadata,
+  Batch = paste(Study, Assay, Platform, Cell_condition, sep = "_")
+)
+
+## Save batches in a text file
+write.table(
+  unique(metadata$Batch),
+  here("NBAtlas", "batches.txt"),
+  sep = "\t",
+  row.names = FALSE,
+  col.names = FALSE,
+  quote = FALSE
+)
 
 # Save the metadata in the Seurat object
 seurat_obj@meta.data <- metadata
