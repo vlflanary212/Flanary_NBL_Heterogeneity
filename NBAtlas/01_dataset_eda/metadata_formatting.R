@@ -8,9 +8,29 @@ library(Seurat)
 library(tidyverse)
 library(here)
 
+# Set filepaths
+data_dir <- here("NBAtlas", "data", "alldata")
+results_dir <- here("NBAtlas", "01_dataset_eda")
+
 ## Load data
 seurat_obj <- readRDS(
-  here("NB_ITH", "NBAtlas", "data", "subset", "00_init_obj.rds")
+  file.path(data_dir, "00_init_obj.rds")
+)
+
+# Split the object by batch
+seurat_obj@meta.data <- mutate(
+  seurat_obj@meta.data,
+  Batch = paste(Study, Assay, Platform, Cell_condition, sep = "_")
+)
+
+## Save batches in a text file
+write.table(
+  unique(seurat_obj$Batch),
+  here("NBAtlas", "batches.txt"),
+  sep = "\t",
+  row.names = FALSE,
+  col.names = FALSE,
+  quote = FALSE
 )
 
 # Extract metadata
@@ -25,9 +45,10 @@ colnames(metadata)
 # [5] "Study"              "Assay"              "Platform"           "Sample"            
 # [9] "Patient_No"         "Timepoint"          "INSS_stage"         "MYCN_amplification"
 # [13] "Gender"             "Risk"               "Cell_condition"     "Cell_type" 
+# [17] "Batch"
 
 # Continuous technical: nCount_RNA, nFeature_RNA, percent_mito
-# Discrete technical: Study, Assay, Platform, Cell_condition
+# Discrete technical: Study, Assay, Platform, Cell_condition (included in Batch)
 # Discrete biological: orig.ident, Sample, Patient_No, Timepoint, INSS_stage,
 # MYCN_amplification, Gender, Risk, Cell_type
 
@@ -42,11 +63,13 @@ metadata <- mutate(
   Study = case_when(grepl("Slyper2020", Study) ~ "Slyper2020", TRUE ~ Study)
   )
 
-## Split Patient_No by Number and Timepoint, and remove Timepoint (already recorded)
+## Edit Patient_No
 ## More easily lets you see which patients have more than one associated sample
-metadata <- metadata |>
-  separate(col = "Patient_No", into = c("Patient_No", "T")) |>
-  dplyr::select(all_of(setdiff(colnames(metadata), "T")))
+metadata$Patient_No <- gsub("^([0-9]+).*", "\\1", metadata$Patient_No)
+metadata$Patient_No <- as.factor(metadata$Patient_No)
+
+## Factorize and re-order levels for Timepoint
+metadata$Timepoint <- factor(metadata$Timepoint, levels = c("pre-treatment", "post-treatment", "relapse", "unknown"))
 
 # Save the metadata in the Seurat object
 seurat_obj@meta.data <- metadata
@@ -54,12 +77,12 @@ seurat_obj@meta.data <- metadata
 # Save the edited Seurat object
 saveRDS(
   seurat_obj,
-  here("NB_ITH", "NBAtlas", "data", "subset", "00_formatted_obj.rds")
+  file.path(data_dir, "00_formatted_obj.rds")
 )
 
 # Isolate metadata of interest for plotting
 # Keeping all but orig.ident and the continuous technical variables
-vars <- c("Study", "Assay", "Platform", "Cell_condition", "Sample", "Patient_No", 
+vars <- c("Batch", "Study", "Assay", "Platform", "Cell_condition", "Sample", "Patient_No", 
           "Gender", "MYCN_amplification", "Risk", "INSS_stage", "Timepoint", "Cell_type")
 
 metadata_filt <- select(metadata, all_of(vars))
@@ -67,7 +90,7 @@ metadata_filt <- select(metadata, all_of(vars))
 ## Save the filtered metadata
 write_csv(
   metadata_filt, 
-  here("NB_ITH", "NBAtlas", "metadata_filt.csv")
+  file.path(results_dir, "metadata_filt.csv")
 )
 
 # End of Script
