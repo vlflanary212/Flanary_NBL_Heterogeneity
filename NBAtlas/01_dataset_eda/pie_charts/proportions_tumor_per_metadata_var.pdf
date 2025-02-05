@@ -115,4 +115,4 @@ for (i in colnames(metadata)) {
   dev.off()
 }
 
-# ENd of script
+# End of script
