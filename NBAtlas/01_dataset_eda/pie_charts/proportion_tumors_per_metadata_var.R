@@ -86,7 +86,7 @@ for (i in colnames(metadata)) {
   metadata_summary <- metadata_summary %>%
     mutate(
       percentage = n / sum(n) * 100, # Calculate percentage
-      label = paste0(n, " (", round(percentage, 1), "%)")
+      label = paste0(round(percentage, 1), "%")
     ) # Combine count and percentage
   
   print(
