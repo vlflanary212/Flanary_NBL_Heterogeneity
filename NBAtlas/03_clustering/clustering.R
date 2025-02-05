@@ -17,13 +17,13 @@ options(future.globals.maxSize = 256 * 1024^3)  # 256 GB maximum RAM
 plan("multisession", workers = 4)  # parallelize across 4 cores
 
 # Set filepaths
-data_dir <- here("NB_ITH", "NBAtlas", "data", "alldata")
-results_dir <- here("NB_ITH", "NBAtlas", "03_clustering")
+data_dir <- here("NBAtlas", "data", "alldata")
+results_dir <- here("NBAtlas", "03_clustering")
 
 # Load data
 seurat_obj <- readRDS(here(data_dir, "01_filt_obj.rds"))
 
-## Split the Seurat object into layers by batch
+# Split the data by batch
 seurat_obj[["RNA"]] <- split(seurat_obj[["RNA"]], f = seurat_obj$Batch)
 
 # Normalize the data
@@ -107,8 +107,7 @@ for (i in resolutions) {
 
 # Run UMAP on the clustered object
 seurat_clust <- RunUMAP(
-  seurat_clust, reduction = "pca", dims = 1:npcs, reduction_name = "umap",
-  min.dist = 0.5, spread = 1.5
+  seurat_clust, reduction = "pca", dims = 1:npcs, reduction_name = "umap"
 )
 
 # Plot unintegrated UMAPs by different clustering resolutions
@@ -160,6 +159,25 @@ for (i in groups){
 
 dev.off()
 
+## Plot batch separately
+pdf(
+here(results_dir, "unintegrated_umap_by_batch.pdf"),
+height = 4, width = 9
+)
+
+  p <- DimPlot(seurat_clust, reduction = "umap", group.by = "Batch",
+               raster = TRUE, shuffle = TRUE) +
+    labs(
+      title = "Unintegrated UMAP by Batch",
+      x = "UMAP_1", y = "UMAP_2"
+    ) +
+    theme(plot.title = element_text(hjust = 0.5))
+
+  print(p)
+
+dev.off()
+
+## Save the unintegrated object
 saveRDS(
   seurat_clust,
   here(data_dir, "03_unint_umap_obj.rds")
@@ -172,6 +190,7 @@ seurat_harmony <- IntegrateLayers(
   dims = 1:npcs, verbose = TRUE
 )
 
+# Save integrated object
 saveRDS(
   seurat_harmony,
   here(data_dir, "04_harmony_obj.rds")
@@ -194,7 +213,7 @@ for (i in resolutions) {
 # Run UMAP on the clustered object
 seurat_harmony_clust <- RunUMAP(
   seurat_harmony_clust, reduction = "harmony", dims = 1:npcs, 
-  reduction.name = "umap_harmony", min.dist = 0.5, spread = 1.5
+  reduction.name = "umap_harmony"
 )
 
 # Plot integrated UMAPs by different clustering resolutions
@@ -246,9 +265,25 @@ for (i in groups){
 
 dev.off()
 
-# Save the integrated object
+# Plot Batch separately again
+pdf(here(results_dir, "integrated_umap_by_batch.pdf"),
+height = 4, width = 9)
+
+  p <- DimPlot(seurat_harmony_clust, reduction = "umap_harmony", group.by = "Batch",
+               raster = TRUE, shuffle = TRUE) +
+    labs(
+      title = "Integrated UMAP by Batch",
+      x = "UMAP_1", y = "UMAP_2"
+    ) +
+    theme(plot.title = element_text(hjust = 0.5))
+
+  print(p)
+
+dev.off()
+
+# Save the clustered integrated object
 saveRDS(
-  seurat_harmony_clust.rds,
+  seurat_harmony_clust,
   here(data_dir, "05_harmony_clust.rds")
 )
 
