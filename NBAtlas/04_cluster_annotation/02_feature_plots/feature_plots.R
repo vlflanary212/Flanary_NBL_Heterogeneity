@@ -1,6 +1,6 @@
 # Author: Victoria Flanary
 # Date: 250129
-# Objective: Run DEA to identify cluster-specific marker genes.
+# Objective: Plot feature plots of cluster-specific marker genes.
 
 # Set.seed
 set.seed(42)
@@ -17,7 +17,7 @@ plan("multisession", workers = 4)  # parallelize across 4 cores
 
 # Set filepaths
 data_dir <- here("NBAtlas", "data", "alldata")
-results_dir <- here("NBAtlas", "04_cluster_annotation", "02_marker_plots", "feature_plot")
+results_dir <- here("NBAtlas", "04_cluster_annotation", "02_feature_plots")
 
 # Load data
 seurat_obj <- readRDS(here(data_dir, "06_dea_obj.rds"))
@@ -25,7 +25,7 @@ seurat_obj <- readRDS(here(data_dir, "06_dea_obj.rds"))
 # Plot marker genes on feature plots
 pdf(
   here(results_dir, "marker_gene_feature_plots.pdf"),
-  height = 40, width = 15
+  height = 48, width = 15
 )
 
 print(
@@ -33,13 +33,15 @@ print(
               features = c("CD2", "CD3D", "LCK",    # T cells
                            "KLRF1", "XCL1", "GNLY",  # NK cells
                            "CD19", "MS4A1", "CD22", # B cells
-                           "JCHAIN", "TNFRSF17", "MZB1", # Plasma cells
-                           "CD163", "CXCL8", "LYZ", # Macrophages
+                           "JCHAIN", "PRDM1", "MZB1", # Plasma cells
+                           "CLEC4C", "LILRA4", "IRF7", # pDCs
+                           "C1QA", "CXCL8", "LYZ", # Macrophages
                            "CD34", "KDR", "CDH5", # Endothelial cells
                            "COL1A1", "COL1A2", "DCN",  # Fibroblasts
-                           "CDH19", "ERBB3", "SOX10",  # Schwann cell precursors
+                           "CDH19", "ERBB3", "PLP1",  # Schwann cell precursors
+                           "STAR", "CYP11B1", "CYP21A2", # Steroidogenic adrenocortical cells
                            "PRPH", "ELAVL4", "STMN2", # Sympathoblasts
-                           "CHGB", "DBH", "PNMT"  # Chrommafin cells
+                           "TH", "DBH", "PNMT"  # Chrommafin cells
                            ))
 )
 
@@ -84,12 +86,14 @@ dev.off()
 ## Other genes of interest
 pdf(
   here(results_dir, "misc_feature_plots.pdf"),
-  height = 4, width = 15
+  height = 8, width = 15
 )
 
 print(
   FeaturePlot(seurat_obj, reduction = "umap_harmony", raster = TRUE, ncol = 3,
-              features = c("MYCN", "VIM", "FOXJ3"))
+              features = c("MYCN", "VIM", "FOXJ3", 
+                           "MKI67", "UBE2C", "BIRC5") # proliferation markers
+  )
 )
 
 dev.off()

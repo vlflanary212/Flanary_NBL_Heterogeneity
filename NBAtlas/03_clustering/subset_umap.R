@@ -1,3 +1,8 @@
+# Author: Victoria Flanary
+# Date: 250205
+# Objective: Plot clusters with similar colors on UMAP to determine 
+# whether separate clusters are being grouped together.
+
 # Set.seed
 set.seed(42)
 
