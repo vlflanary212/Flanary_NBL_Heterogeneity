@@ -12,7 +12,7 @@ bulk_counts <- read.table(
 )
 
 sc_counts <- read_csv(
-  here("NBAtlas", "05_pseudobulking", "signature_matrix.csv")
+  here("NBAtlas", "06_pseudobulking", "signature_matrix.csv")
 ) |> as.data.frame()
 
 # Format Single-Cell Signatures

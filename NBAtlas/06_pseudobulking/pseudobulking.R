@@ -10,7 +10,7 @@ library(here)
 
 # Set filepaths
 data_dir <- here("NBAtlas", "data", "alldata")
-results_dir <- here("NBAtlas", "05_pseudobulking")
+results_dir <- here("NBAtlas", "06_pseudobulking")
 
 # Load data
 seurat_obj <- readRDS(here(data_dir, "08_final_anno.rds"))

@@ -17,7 +17,7 @@ plan("multisession", workers = 4)  # parallelize across 4 cores
 
 # Set filepaths
 data_dir <- here("NBAtlas", "data", "alldata")
-results_dir <- here("NBAtlas", "04_cluster_annotation", "05_dot_plots")
+results_dir <- here("NBAtlas", "05_cluster_analyses", "02_dot_plots")
 
 # Load data
 seurat_obj <- readRDS(here(data_dir, "08_final_anno.rds"))
