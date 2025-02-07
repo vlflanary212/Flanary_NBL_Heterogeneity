@@ -26,7 +26,8 @@ metadata <- seurat_obj@meta.data
 ### Edit Risk column 
 unique(metadata$Risk)  # "Low/Intermediate" "High"             "_unknown"   
 metadata$Risk <- ifelse(metadata$Risk == "Low/Intermediate", "Low", metadata$Risk)
-metadata$Risk <- factor(metadata$Risk, levels = c("High", "Low", "_unknown"))
+metadata$Risk <- ifelse(metadata$Risk == "unknown", "Unknown", metadata$Risk)
+metadata$Risk <- factor(metadata$Risk, levels = c("High", "Low", "Unknown"))
 unique(metadata$Risk) 
 
 ### Plot MYCN status for different Risk levels
@@ -68,11 +69,11 @@ dev.off()
 ### Add Westermann Groups
 metadata <- metadata |> 
   mutate(Group = ifelse(
-    Risk != "unknown" & MYCN_amplification != "unknown",
+    Risk != "Unknown" & MYCN_amplification != "unknown",
     paste0(Risk, "-Risk", "_", "MYCN-", MYCN_amplification), "Unknown")) |>
   relocate(Group, .after = Risk)
 
-metadata$Group <- ifelse(metadata$Group == "_unknown-Risk_MYCN-_unknown", "Unknown", metadata$Group)
+metadata$Group <- ifelse(metadata$Group == "Unknown-Risk_MYCN-unknown", "Unknown", metadata$Group)
 
 ### Plot the number of tumors in each Westermann Group on bar plot
 #### Select the relevant columns and summarize data
@@ -154,12 +155,26 @@ print(p)
 
 dev.off()
 
+
 # Determine tumor cell clusters across treatment timepoints
-## Edit Timepoint
-metadata$Timepoint <- factor(metadata$Timepoint, levels = c("pre-treatment", "post-treatment", "relapse", "_unknown"))
+## Filter for patients from which multiple tumor samples were collected
+metadata_summary <- metadata[, c("Sample", "Patient_No")] |> 
+  distinct() |>
+  group_by(Patient_No) |>   
+  summarise(n = n(), .groups = "drop") |>
+  filter(n >= 2)
+
+
+metadata_filt <-  metadata |> 
+  filter(Patient_No %in% metadata_summary$Patient_No) |>
+  dplyr::select(Patient_No, Group, Timepoint, Cell_type) |> 
+  distinct() |> 
+  arrange(Patient_No, Timepoint) 
+
+metadata_filt$Timepoint <- factor(metadata_filt$Timepoint, levels = c("pre-treatment", "post-treatment", "relapse"))
 
 ## Calculate proportion data
-proportion_data <- metadata |>
+proportion_data <- metadata_filt |>
   group_by(Timepoint, Cell_type) |>
   summarize(count = n(), .groups = "drop") |>
   group_by(Timepoint) |>
@@ -191,6 +206,50 @@ p <- ggplot(
 
 print(p)
 
+dev.off()
+
+## Generate the same plot for each individual patient in metadata_filt
+# Open a single PDF file to save all plots
+pdf(
+  file.path(results_dir, "ne_clusters_by_treatment_timepoint_by_patient.pdf")
+)
+
+# Loop through each unique Patient_No
+for (patient in unique(metadata_filt$Patient_No)) {
+  
+  # Filter data for the current patient
+  patient_data <- metadata_filt |> 
+    filter(Patient_No == patient) |> 
+    group_by(Timepoint, Cell_type) |> 
+    summarize(count = n(), .groups = "drop") |> 
+    group_by(Timepoint) |> 
+    mutate(percentage = count / sum(count)) |> 
+    ungroup()
+  
+  # Generate the stacked bar plot
+  p <- ggplot(
+    patient_data,
+    aes(x = Timepoint, y = percentage, fill = Cell_type)
+  ) +
+    geom_bar(stat = "identity") +
+    scale_y_continuous(labels = scales::percent) +
+    labs(
+      title = paste("Tumor Cell Clusters by Treatment Timepoint - Patient", patient),
+      x = "Timepoint",
+      y = "Percentage",
+      fill = "Tumor Cluster"
+    ) +
+    theme_minimal() +
+    theme(
+      plot.title = element_text(hjust = 0.5),
+      axis.text.x = element_text(angle = 45, hjust = 1)
+    )
+  
+  # Print the plot to the PDF device
+  print(p)
+}
+
+# Close the PDF file after all plots are added
 dev.off()
 
 # End of script
