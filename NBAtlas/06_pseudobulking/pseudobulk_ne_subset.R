@@ -14,10 +14,7 @@ data_dir <- here("NBAtlas", "data", "alldata")
 results_dir <- here("NBAtlas", "06_pseudobulking")
 
 # Load data
-seurat_obj <- readRDS(here(data_dir, "08_final_anno.rds"))
-
-# Subset neuroendocrine cells
-seurat_obj <- subset(seurat_obj, idents = grep("^NE_", Idents(seurat_obj), value = TRUE))
+seurat_obj <- readRDS(here(data_dir, "09_ne_subset.rds"))
 
 # Pseudo-bulking
 ## Aggregate gene expression per cell type
